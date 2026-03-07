@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>API Remodeling & Home Buying</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root { --blue: #0a1628; --orange: #f97316; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { background: #0a1628; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; min-height: 100vh; overflow-x: hidden; }
+  .btn-orange { background: #f97316; color: #fff; border: none; border-radius: 8px; padding: 12px 20px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; width: 100%; }
+  .btn-orange:hover { background: #ea6c0a; }
+  .btn-blue { background: #1e3a5f; color: #fff; border: none; border-radius: 8px; padding: 12px 20px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; width: 100%; }
+  .btn-blue:hover { background: #2a4f80; }
+  .btn-ghost { background: transparent; color: #f97316; border: 2px solid #f97316; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-ghost:hover { background: #f97316; color: #fff; }
+  .btn-sm { padding: 8px 14px; font-size: 13px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+  .btn-danger { background: #dc2626; color: #fff; }
+  .btn-success { background: #16a34a; color: #fff; }
+  .card { background: #111f38; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #1e3a5f; }
+  .input-field { background: #0d1f36; border: 1px solid #1e3a5f; border-radius: 8px; padding: 12px; color: #fff; font-size: 16px; width: 100%; outline: none; transition: border-color 0.2s; }
+  .input-field:focus { border-color: #f97316; }
+  .input-field::placeholder { color: #4a6080; }
+  .tab-bar { display: flex; background: #111f38; border-bottom: 1px solid #1e3a5f; overflow-x: auto; }
+  .tab { padding: 14px 20px; color: #6b8099; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s; }
+  .tab.active { color: #f97316; border-bottom-color: #f97316; }
+  .header { background: #111f38; padding: 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e3a5f; position: sticky; top: 0; z-index: 100; }
+  .badge { display: inline-block; background: #f97316; color: #fff; border-radius: 12px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .badge-blue { background: #1e3a5f; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal { background: #111f38; border-radius: 16px; padding: 24px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; border: 1px solid #1e3a5f; }
+  .stage-row { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #0d1f36; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #1e3a5f; }
+  .stage-row.complete { border-left-color: #16a34a; }
+  .stage-row.in-progress { border-left-color: #f97316; }
+  .stage-row.pending { border-left-color: #4a6080; }
+  .msg-bubble { padding: 10px 14px; border-radius: 12px; margin-bottom: 8px; max-width: 80%; font-size: 14px; line-height: 1.4; }
+  .msg-bubble.admin { background: #1e3a5f; margin-left: auto; border-bottom-right-radius: 4px; }
+  .msg-bubble.sub { background: #1a2a1a; border-bottom-left-radius: 4px; }
+  .msg-bubble.client { background: #2a1a0a; border-bottom-left-radius: 4px; }
+  select.input-field { appearance: none; }
+  .select-wrapper { position: relative; }
+  .select-wrapper::after { content: '‚ñº'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #4a6080; pointer-events: none; font-size: 12px; }
+  #app { min-height: 100vh; }
+  .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .spinner { width: 40px; height: 40px; border: 4px solid #1e3a5f; border-top-color: #f97316; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .lang-toggle { background: #1e3a5f; border: 1px solid #f97316; color: #f97316; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .progress-bar { background: #1e3a5f; border-radius: 4px; height: 6px; overflow: hidden; }
+  .progress-fill { background: #f97316; height: 100%; border-radius: 4px; transition: width 0.3s; }
+  .thread-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #0d1f36; border-radius: 8px; margin-bottom: 8px; cursor: pointer; border: 1px solid #1e3a5f; transition: border-color 0.2s; }
+  .thread-item:hover { border-color: #f97316; }
+  .thread-avatar { width: 44px; height: 44px; border-radius: 50%; background: #1e3a5f; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: #f97316; flex-shrink: 0; }
+  .unread-dot { width: 10px; height: 10px; background: #f97316; border-radius: 50%; }
+  .msg-time { font-size: 11px; color: #4a6080; margin-top: 4px; }
+  .msg-sender { font-size: 11px; color: #6b8099; margin-bottom: 2px; }
+  .msg-input-bar { display: flex; gap: 8px; padding: 12px; background: #111f38; border-top: 1px solid #1e3a5f; position: sticky; bottom: 0; }
+  .msg-input-bar .input-field { flex: 1; }
+  .send-btn { background: #f97316; border: none; border-radius: 8px; padding: 12px 16px; color: #fff; cursor: pointer; font-size: 18px; }
+  .login-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+  .logo-area { text-align: center; margin-bottom: 40px; }
+  .logo-icon { font-size: 56px; margin-bottom: 12px; }
+  h1.brand { font-size: 24px; font-weight: 800; color: #fff; margin: 0; }
+  h1.brand span { color: #f97316; }
+  .brand-sub { color: #6b8099; font-size: 14px; margin-top: 4px; }
+  .login-btns { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 360px; }
+  .pin-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+  .pin-dots { display: flex; gap: 12px; justify-content: center; margin: 24px 0; }
+  .pin-dot { width: 16px; height: 16px; border-radius: 50%; background: #1e3a5f; border: 2px solid #4a6080; transition: background 0.15s; }
+  .pin-dot.filled { background: #f97316; border-color: #f97316; }
+  .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 280px; }
+  .pin-key { background: #111f38; border: 1px solid #1e3a5f; border-radius: 12px; padding: 18px; text-align: center; font-size: 22px; font-weight: 700; cursor: pointer; color: #fff; transition: background 0.15s; user-select: none; }
+  .pin-key:hover, .pin-key:active { background: #1e3a5f; }
+  .pin-key.del { font-size: 16px; color: #f97316; }
+  .status-pill { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .status-pending { background: #1e3a5f; color: #6b8099; }
+  .status-in-progress { background: #7c3500; color: #f97316; }
+  .status-complete { background: #14532d; color: #86efac; }
+  .notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #f97316; color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: 600; z-index: 9999; animation: slideDown 0.3s ease; }
+  @keyframes slideDown { from { top: -60px; opacity: 0; } to { top: 20px; opacity: 1; } }
+  .scroll-area { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+
+// ============================================================
+// DATA & STATE
+// ============================================================
+const STAGES = ['Demo','Foundation','Excavation','Framing','Roof','Windows','Exterior Doors','Mechanical','Electrical','Plumbing','Insulation','Drywall','Tape & Bed & Texture','Interior Doors & Trim','Flooring','Painting','Tile','Cabinets','Countertops','Make Ready','Final Walk Thru'];
+const TRADES = ['General Contractor','Demo','Foundation','Excavation','Framing','Roofing','Windows','Doors','Mechanical/HVAC','Electrical','Plumbing','Insulation','Drywall','Tape & Bed','Interior Trim','Flooring','Painting','Tile','Cabinets','Countertops','Landscaping','Concrete','Inspection'];
+
+const T = {
+  en: {
+    brand: 'API Remodeling', brandSub: '& Home Buying',
+    login: 'Welcome Back', loginSub: 'Sign in to your account',
+    admin: 'Admin', client: 'Client', subcontractor: 'Subcontractor',
+    enterPin: 'Enter PIN', enterUser: 'Enter Username',
+    projects: 'Projects', subs: 'Subcontractors', creds: 'Credentials',
+    newProject: 'New Project', addSub: 'Add Subcontractor',
+    clientName: 'Client Name', address: 'Address', description: 'Description',
+    startDate: 'Start Date', budget: 'Budget ($)', projectPin: 'Project PIN (4+ digits)',
+    save: 'Save', cancel: 'Cancel', delete: 'Delete', edit: 'Edit',
+    stages: 'Stages', messages: 'Messages', overview: 'Overview',
+    price: 'Price ($)', stageName: 'Stage', status: 'Status',
+    pending: 'Pending', inProgress: 'In Progress', complete: 'Complete',
+    stageStart: 'Start Date', stageEnd: 'End Date',
+    name: 'Full Name', trade: 'Trade', username: 'Username', pin: 'PIN', phone: 'Phone',
+    assignedProjects: 'Assigned Projects', assign: 'Assign to Project',
+    logout: 'Logout', back: 'Back',
+    totalBudget: 'Total Budget', completedStages: 'Completed Stages',
+    yourProjects: 'Your Projects', tradeThread: 'Trade Thread',
+    typeMessage: 'Type a message...', send: 'Send',
+    invalidPin: 'Invalid PIN. Please try again.',
+    invalidCreds: 'Invalid credentials. Please try again.',
+    noProjects: 'No projects yet. Create your first project!',
+    noSubs: 'No subcontractors yet.',
+    projectCreated: 'Project created!', subCreated: 'Subcontractor created!',
+    projectUpdated: 'Project updated!', subUpdated: 'Updated!',
+    deleted: 'Deleted successfully.',
+    progress: 'Progress', allStages: 'All Stages',
+    clientView: 'Client View', subView: 'Sub View',
+    credentials: 'Access Credentials', adminPin: 'Admin PIN: 1234',
+    projectPins: 'Project PINs', subAccounts: 'Sub Accounts',
+    noAssigned: 'No projects assigned yet.',
+    confirmDelete: 'Confirm Delete',
+    confirmDeleteMsg: 'This action cannot be undone.',
+    threads: '23 Trade Threads', selectThread: 'Select a trade to message',
+    adminLabel: 'Admin', subLabel: 'Sub', clientLabel: 'Client',
+    msgSent: 'Message sent!',
+    search: 'Search...',
+    budgetLabel: 'Budget',
+    stagesLabel: 'Stages',
+  },
+  es: {
+    brand: 'API Remodelaci√≥n', brandSub: '& Compra de Casas',
+    login: 'Bienvenido', loginSub: 'Inicia sesi√≥n en tu cuenta',
+    admin: 'Administrador', client: 'Cliente', subcontractor: 'Subcontratista',
+    enterPin: 'Ingresa PIN', enterUser: 'Ingresa Usuario',
+    projects: 'Proyectos', subs: 'Subcontratistas', creds: 'Credenciales',
+    newProject: 'Nuevo Proyecto', addSub: 'Agregar Subcontratista',
+    clientName: 'Nombre del Cliente', address: 'Direcci√≥n', description: 'Descripci√≥n',
+    startDate: 'Fecha de Inicio', budget: 'Presupuesto ($)', projectPin: 'PIN del Proyecto (4+ d√≠gitos)',
+    save: 'Guardar', cancel: 'Cancelar', delete: 'Eliminar', edit: 'Editar',
+    stages: 'Etapas', messages: 'Mensajes', overview: 'Resumen',
+    price: 'Precio ($)', stageName: 'Etapa', status: 'Estado',
+    pending: 'Pendiente', inProgress: 'En Progreso', complete: 'Completo',
+    stageStart: 'Fecha Inicio', stageEnd: 'Fecha Fin',
+    name: 'Nombre Completo', trade: 'Oficio', username: 'Usuario', pin: 'PIN', phone: 'Tel√©fono',
+    assignedProjects: 'Proyectos Asignados', assign: 'Asignar a Proyecto',
+    logout: 'Cerrar Sesi√≥n', back: 'Atr√°s',
+    totalBudget: 'Presupuesto Total', completedStages: 'Etapas Completadas',
+    yourProjects: 'Tus Proyectos', tradeThread: 'Hilo de Oficio',
+    typeMessage: 'Escribe un mensaje...', send: 'Enviar',
+    invalidPin: 'PIN inv√°lido. Intenta de nuevo.',
+    invalidCreds: 'Credenciales inv√°lidas. Intenta de nuevo.',
+    noProjects: '¬°Sin proyectos a√∫n. Crea tu primer proyecto!',
+    noSubs: 'Sin subcontratistas a√∫n.',
+    projectCreated: '¬°Proyecto creado!', subCreated: '¬°Subcontratista creado!',
+    projectUpdated: '¬°Proyecto actualizado!', subUpdated: '¬°Actualizado!',
+    deleted: 'Eliminado con √©xito.',
+    progress: 'Progreso', allStages: 'Todas las Etapas',
+    clientView: 'Vista Cliente', subView: 'Vista Sub',
+    credentials: 'Credenciales de Acceso', adminPin: 'PIN Admin: 1234',
+    projectPins: 'PINs de Proyectos', subAccounts: 'Cuentas Sub',
+    noAssigned: 'Sin proyectos asignados a√∫n.',
+    confirmDelete: 'Confirmar Eliminaci√≥n',
+    confirmDeleteMsg: 'Esta acci√≥n no se puede deshacer.',
+    threads: '23 Hilos de Oficios', selectThread: 'Selecciona un oficio para mensajear',
+    adminLabel: 'Admin', subLabel: 'Sub', clientLabel: 'Cliente',
+    msgSent: '¬°Mensaje enviado!',
+    search: 'Buscar...',
+    budgetLabel: 'Presupuesto',
+    stagesLabel: 'Etapas',
+  }
+};
+
+// App State
+let state = {
+  lang: 'en',
+  screen: 'login', // login | admin | client | sub | pinEntry
+  pinMode: null, // admin | client | sub
+  currentUser: null, // { type, projectId?, subId? }
+  adminTab: 'projects',
+  projectView: null, // projectId
+  projectTab: 'overview', // overview | stages | messages
+  messageThread: null, // trade name
+  subView: null, // subId
+  modal: null,
+  notification: null,
+  pinInput: '',
+  usernameInput: '',
+};
+
+function getDB() {
+  return {
+    projects: JSON.parse(localStorage.getItem('api_projects') || '[]'),
+    subs: JSON.parse(localStorage.getItem('api_subs') || '[]'),
+    messages: JSON.parse(localStorage.getItem('api_messages') || '{}'),
+  };
+}
+function saveProjects(p) { localStorage.setItem('api_projects', JSON.stringify(p)); }
+function saveSubs(s) { localStorage.setItem('api_subs', JSON.stringify(s)); }
+function saveMessages(m) { localStorage.setItem('api_messages', JSON.stringify(m)); }
+
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function t(key) { return T[state.lang][key] || T.en[key] || key; }
+
+function createDefaultStages() {
+  return STAGES.map(name => ({ name, price: '', start: '', end: '', status: 'pending' }));
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+function showNotif(msg, duration=2500) {
+  const el = document.createElement('div');
+  el.className = 'notification';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), duration);
+}
+
+// ============================================================
+// RENDER ENGINE
+// ============================================================
+function render() {
+  const app = document.getElementById('app');
+  let html = '';
+  switch(state.screen) {
+    case 'login': html = renderLogin(); break;
+    case 'pinEntry': html = renderPinEntry(); break;
+    case 'admin': html = renderAdmin(); break;
+    case 'client': html = renderClient(); break;
+    case 'sub': html = renderSub(); break;
+    default: html = renderLogin();
+  }
+  app.innerHTML = html;
+  attachEvents();
+  if (state.modal) renderModal();
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+function renderLogin() {
+  return `
+  <div class="login-screen">
+    <div class="logo-area">
+      <div class="logo-icon">Ì†ºÌøóÔ∏è</div>
+      <h1 class="brand">${t('brand')} <span>${t('brandSub')}</span></h1>
+      <p class="brand-sub">${t('loginSub')}</p>
+    </div>
+    <div class="login-btns">
+      <button class="btn-orange" onclick="goPin('admin')">${t('admin')}</button>
+      <button class="btn-blue" onclick="goPin('client')">${t('client')}</button>
+      <button class="btn-blue" onclick="goPin('sub')">${t('subcontractor')}</button>
+    </div>
+    <button class="lang-toggle" style="margin-top:32px" onclick="toggleLang()">${state.lang==='en'?'ES':'EN'}</button>
+  </div>`;
+}
+
+function goPin(mode) {
+  state.pinMode = mode;
+  state.pinInput = '';
+  state.usernameInput = '';
+  state.screen = 'pinEntry';
+  render();
+}
+window.goPin = goPin;
+
+function toggleLang() {
+  state.lang = state.lang === 'en' ? 'es' : 'en';
+  render();
+}
+window.toggleLang = toggleLang;
+
+// ============================================================
+// PIN ENTRY
+// ============================================================
+function renderPinEntry() {
+  const isSub = state.pinMode === 'sub';
+  const dots = Array.from({length:6}, (_,i) => `<div class="pin-dot ${i < state.pinInput.length ? 'filled' : ''}"></div>`).join('');
+  const userField = isSub ? `
+    <div style="margin-bottom:16px;width:100%;max-width:280px">
+      <input class="input-field" id="usernameInput" placeholder="${t('username')}" value="${state.usernameInput}" oninput="state.usernameInput=this.value" autocomplete="off" autocapitalize="none">
+    </div>` : '';
+  return `
+  <div class="pin-screen">
+    <button class="btn-ghost" style="margin-bottom:24px" onclick="backToLogin()">&larr; ${t('back')}</button>
+    <div class="logo-area" style="margin-bottom:16px">
+      <div style="font-size:32px">${state.pinMode==='admin'?'Ì†ΩÌ¥ë':state.pinMode==='client'?'Ì†ºÌø†':'Ì†ΩÌ¥ß'}</div>
+      <h2 style="font-size:20px;font-weight:700;margin:8px 0 4px">${t(state.pinMode)}</h2>
+      <p style="color:#6b8099;font-size:14px">${t('enterPin')}</p>
+    </div>
+    ${userField}
+    <div class="pin-dots">${dots}</div>
+    <div class="pin-pad">
+      ${[1,2,3,4,5,6,7,8,9,'',0,'‚å´'].map(k => `<div class="pin-key ${k==='‚å´'?'del':''}" onclick="pinKey('${k}')">${k}</div>`).join('')}
+    </div>
+    <button class="btn-orange" style="max-width:280px;margin-top:20px" onclick="submitPin()">${t('enterPin')}</button>
+    <button class="lang-toggle" style="margin-top:16px" onclick="toggleLang()">${state.lang==='en'?'ES':'EN'}</button>
+  </div>`;
+}
+
+function pinKey(k) {
+  if (k === '‚å´' || k === '') {
+    if (k === '‚å´') state.pinInput = state.pinInput.slice(0,-1);
+    else return;
+  } else {
+    if (state.pinInput.length < 8) state.pinInput += String(k);
+  }
+  // Re-render just the dots
+  document.querySelectorAll('.pin-dot').forEach((el,i) => {
+    el.classList.toggle('filled', i < state.pinInput.length);
+  });
+}
+window.pinKey = pinKey;
+
+function backToLogin() { state.screen = 'login'; render(); }
+window.backToLogin = backToLogin;
+
+function submitPin() {
+  const pin = state.pinInput.trim();
+  if (!pin) return;
+  if (state.pinMode === 'admin') {
+    if (pin === '1234') {
+      state.screen = 'admin';
+      state.currentUser = { type: 'admin' };
+      state.adminTab = 'projects';
+      render();
+    } else { showNotif(t('invalidPin')); state.pinInput=''; render(); }
+  } else if (state.pinMode === 'client') {
+    const db = getDB();
+    const proj = db.projects.find(p => p.pin === pin);
+    if (proj) {
+      state.screen = 'client';
+      state.currentUser = { type: 'client', projectId: proj.id };
+      render();
+    } else { showNotif(t('invalidPin')); state.pinInput=''; render(); }
+  } else if (state.pinMode === 'sub') {
+    const uname = state.usernameInput.trim().toLowerCase();
+    const db = getDB();
+    const sub = db.subs.find(s => s.username.toLowerCase()===uname && s.pin===pin);
+    if (sub) {
+      state.screen = 'sub';
+      state.currentUser = { type: 'sub', subId: sub.id };
+      render();
+    } else { showNotif(t('invalidCreds')); state.pinInput=''; render(); }
+  }
+}
+window.submitPin = submitPin;
+
+// ============================================================
+// ADMIN DASHBOARD
+// ============================================================
+function renderAdmin() {
+  const header = '<div class="header">' +
+    '<div style="display:flex;align-items:center;gap:10px">' +
+    '<span style="font-size:22px">&#127959;</span>' +
+    '<div><div style="font-weight:800;font-size:15px">' + t('brand') + '</div>' +
+    '<div style="font-size:11px;color:#6b8099">' + t('admin') + '</div></div></div>' +
+    '<div style="display:flex;gap:8px;align-items:center">' +
+    '<button class="lang-toggle" onclick="toggleLang()">' + (state.lang==='en'?'ES':'EN') + '</button>' +
+    '<button class="btn-ghost" onclick="logout()" style="padding:6px 12px;font-size:13px">' + t('logout') + '</button>' +
+    '</div></div>';
+
+  const tabs = '<div class="tab-bar">' +
+    '<div class="tab ' + (state.adminTab==='projects'?'active':'') + '" onclick="setAdminTab('projects')">' + t('projects') + '</div>' +
+    '<div class="tab ' + (state.adminTab==='subs'?'active':'') + '" onclick="setAdminTab('subs')">' + t('subs') + '</div>' +
+    '<div class="tab ' + (state.adminTab==='creds'?'active':'') + '" onclick="setAdminTab('creds')">' + t('creds') + '</div>' +
+    '</div>';
+
+  let content = '';
+  if (state.adminTab === 'projects') {
+    if (state.projectView) content = renderAdminProjectDetail();
+    else content = renderAdminProjectList();
+  } else if (state.adminTab === 'subs') {
+    content = renderAdminSubs();
+  } else {
+    content = renderAdminCreds();
+  }
+  return header + tabs + content;
+}
+
+function setAdminTab(tab) { state.adminTab = tab; state.projectView = null; render(); }
+window.setAdminTab = setAdminTab;
+
+function logout() { state.screen='login'; state.currentUser=null; state.pinInput=''; render(); }
+window.logout = logout;
+
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatNum(n) {
+  return Number(n).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:2});
+}
+
+// ---- PROJECT LIST ----
+function renderAdminProjectList() {
+  const db = getDB();
+  const projects = db.projects;
+  if (projects.length === 0) {
+    return '<div style="padding:16px"><button class="btn-orange" onclick="openModal('newProject')" style="margin-bottom:16px">+ ' + t('newProject') + '</button>' +
+      '<div style="text-align:center;padding:40px;color:#6b8099">' + t('noProjects') + '</div></div>';
+  }
+  const cards = projects.map(function(p) {
+    const completed = (p.stages||[]).filter(function(s){return s.status==='complete';}).length;
+    const total = (p.stages||[]).length;
+    const pct = total > 0 ? Math.round(completed/total*100) : 0;
+    return '<div class="card" style="cursor:pointer" onclick="openProject(\'' + p.id + '\')">' +
+      '<div style="display:flex;justify-content:space-between;align-items:start">' +
+      '<div><div style="font-weight:700;font-size:16px">' + escHtml(p.clientName) + '</div>' +
+      '<div style="color:#6b8099;font-size:13px;margin-top:2px">' + escHtml(p.address||'') + '</div></div>' +
+      '<div style="text-align:right"><span class="badge">' + pct + '%</span>' +
+      '<div style="color:#6b8099;font-size:11px;margin-top:4px">PIN: ' + p.pin + '</div></div></div>' +
+      '<div class="progress-bar" style="margin-top:10px"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+      '<div style="color:#6b8099;font-size:12px;margin-top:6px">' + completed + '/' + total + ' ' + t('stages') + '</div>' +
+      '</div>';
+  }).join('');
+  return '<div style="padding:16px"><button class="btn-orange" onclick="openModal('newProject')" style="margin-bottom:16px">+ ' + t('newProject') + '</button>' + cards + '</div>';
+}
+window.openProject = function(id) { state.projectView = id; state.projectTab='overview'; render(); };
+
+// ---- PROJECT DETAIL ----
+function renderAdminProjectDetail() {
+  const db = getDB();
+  const p = db.projects.find(function(x){return x.id===state.projectView;});
+  if (!p) return '<div style="padding:16px;color:#6b8099">Project not found.</div>';
+
+  const ptabs = '<div class="tab-bar">' +
+    '<div class="tab ' + (state.projectTab==='overview'?'active':'') + '" onclick="setPTab('overview')">' + t('overview') + '</div>' +
+    '<div class="tab ' + (state.projectTab==='stages'?'active':'') + '" onclick="setPTab('stages')">' + t('stages') + '</div>' +
+    '<div class="tab ' + (state.projectTab==='messages'?'active':'') + '" onclick="setPTab('messages')">' + t('messages') + '</div>' +
+    '</div>';
+
+  const backBtn = '<div style="padding:12px 16px;border-bottom:1px solid #1e3a5f">' +
+    '<button class="btn-ghost" onclick="state.projectView=null;render()" style="padding:6px 14px;font-size:13px">&larr; ' + t('back') + '</button></div>';
+
+  let body = '';
+  if (state.projectTab==='overview') body = renderProjectOverview(p, db, true);
+  else if (state.projectTab==='stages') body = renderProjectStages(p, true);
+  else body = renderProjectMessages(p, db);
+
+  return backBtn + ptabs + body;
+}
+
+function setPTab(tab) { state.projectTab=tab; state.messageThread=null; render(); }
+window.setPTab = setPTab;
+
+function renderProjectOverview(p, db, isAdmin) {
+  const completed = (p.stages||[]).filter(function(s){return s.status==='complete';}).length;
+  const total = (p.stages||[]).length;
+  const pct = total>0?Math.round(completed/total*100):0;
+  const totalCost = (p.stages||[]).reduce(function(a,s){return a+(parseFloat(s.price)||0);},0);
+  
+  const assignedSubs = isAdmin ? (db.subs||[]).filter(function(s){return (s.projects||[]).includes(p.id);}) : [];
+  const subList = assignedSubs.length > 0
+    ? assignedSubs.map(function(s){return '<div style="font-size:13px;color:#a0b4c8;padding:4px 0">&bull; ' + escHtml(s.name) + ' &mdash; ' + escHtml(s.trade) + '</div>';}).join('')
+    : '<div style="color:#6b8099;font-size:13px">None assigned</div>';
+
+  const editBtns = isAdmin ? '<div style="display:flex;gap:8px;margin-top:12px">' +
+    '<button class="btn-sm btn-blue" onclick="openModal('editProject','' + p.id + '')" style="flex:1">' + t('edit') + '</button>' +
+    '<button class="btn-sm btn-danger" onclick="openModal('deleteProject','' + p.id + '')" style="flex:1">' + t('delete') + '</button></div>' : '';
+
+  const subSection = isAdmin ? '<div class="card"><div style="font-weight:700;margin-bottom:8px">Assigned Subs</div>' + subList +
+    '<button class="btn-sm btn-blue" onclick="openModal('assignSub','' + p.id + '')" style="margin-top:10px;width:100%">' + t('assign') + '</button></div>' : '';
+
+  return '<div style="padding:16px">' +
+    '<div class="card">' +
+    '<div style="font-size:22px;font-weight:800;color:#fff">' + escHtml(p.clientName) + '</div>' +
+    '<div style="color:#6b8099;font-size:14px;margin-top:4px">' + escHtml(p.address||'') + '</div>' +
+    (p.description?'<div style="color:#a0b4c8;font-size:13px;margin-top:8px">'+escHtml(p.description)+'</div>':'') +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">' +
+    '<div style="background:#0d1f36;border-radius:8px;padding:12px"><div style="color:#6b8099;font-size:11px;text-transform:uppercase">' + t('budgetLabel') + '</div><div style="font-weight:700;font-size:18px;color:#f97316">$' + formatNum(p.budget||0) + '</div></div>' +
+    '<div style="background:#0d1f36;border-radius:8px;padding:12px"><div style="color:#6b8099;font-size:11px;text-transform:uppercase">' + t('progress') + '</div><div style="font-weight:700;font-size:18px;color:#f97316">' + pct + '%</div></div>' +
+    '<div style="background:#0d1f36;border-radius:8px;padding:12px"><div style="color:#6b8099;font-size:11px;text-transform:uppercase">' + t('stagesLabel') + '</div><div style="font-weight:700;font-size:18px">' + completed + '/' + total + '</div></div>' +
+    '<div style="background:#0d1f36;border-radius:8px;padding:12px"><div style="color:#6b8099;font-size:11px;text-transform:uppercase">PIN</div><div style="font-weight:700;font-size:18px;color:#f97316">' + p.pin + '</div></div>' +
+    '</div>' +
+    '<div class="progress-bar" style="margin-top:12px"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+    editBtns + '</div>' +
+    subSection +
+    '<div class="card"><div style="font-weight:700;margin-bottom:4px">Stage Cost Total</div><div style="font-size:22px;font-weight:800;color:#f97316">$' + formatNum(totalCost) + '</div></div>' +
+    '</div>';
+}
+
+function renderProjectStages(p, isAdmin) {
+  const stages = p.stages || [];
+  const rows = stages.map(function(s,i) {
+    const cls = s.status==='complete'?'complete':s.status==='in-progress'?'in-progress':'pending';
+    const statusPill = '<span class="status-pill status-' + s.status.replace(' ','-') + '">' + getStatusLabel(s.status) + '</span>';
+    
+    const adminControls = isAdmin ? 
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">' +
+      '<select class="input-field" style="flex:1;padding:6px;font-size:13px" onchange="updateStageField('' + p.id + '',' + i + ','status',this.value)">' +
+      '<option value="pending"' + (s.status==='pending'?' selected':'') + '>' + t('pending') + '</option>' +
+      '<option value="in-progress"' + (s.status==='in-progress'?' selected':'') + '>' + t('inProgress') + '</option>' +
+      '<option value="complete"' + (s.status==='complete'?' selected':'') + '>' + t('complete') + '</option>' +
+      '</select>' +
+      '<input type="number" class="input-field" style="flex:1;padding:6px;font-size:13px" placeholder="' + t('price') + '" value="' + (s.price||'') + '" onchange="updateStageField('' + p.id + '',' + i + ','price',this.value)">' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;margin-top:6px">' +
+      '<input type="date" class="input-field" style="flex:1;padding:6px;font-size:12px" value="' + (s.start||'') + '" onchange="updateStageField('' + p.id + '',' + i + ','start',this.value)">' +
+      '<input type="date" class="input-field" style="flex:1;padding:6px;font-size:12px" value="' + (s.end||'') + '" onchange="updateStageField('' + p.id + '',' + i + ','end',this.value)">' +
+      '</div>' :
+      '<div style="display:flex;gap:12px;font-size:13px;color:#a0b4c8;margin-top:4px">' +
+      (s.price?'<span>$'+formatNum(parseFloat(s.price||0))+'</span>':'') +
+      (s.start?'<span>'+s.start+'</span>':'') +
+      (s.end?'<span>&rarr; '+s.end+'</span>':'') +
+      '</div>';
+
+    return '<div class="stage-row ' + cls + '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+      '<div style="font-weight:600;font-size:15px">' + escHtml(s.name) + '</div>' +
+      statusPill + '</div>' + adminControls + '</div>';
+  }).join('');
+  return '<div style="padding:16px">' + rows + '</div>';
+}
+
+function getStatusLabel(status) {
+  if (status==='pending') return t('pending');
+  if (status==='in-progress') return t('inProgress');
+  if (status==='complete') return t('complete');
+  return status;
+}
+
+window.updateStageField = function(projectId, idx, field, value) {
+  const db = getDB();
+  const p = db.projects.find(function(x){return x.id===projectId;});
+  if (!p) return;
+  p.stages[idx][field] = value;
+  saveProjects(db.projects);
+};
+
+// ============================================================
+// PROJECT MESSAGES (Trade Threads)
+// ============================================================
+function renderProjectMessages(p, db) {
+  if (state.messageThread) {
+    return renderThreadView(p, db);
+  }
+  const trades = TRADES;
+  const msgs = JSON.parse(localStorage.getItem('api_messages') || '{}');
+  const threadList = trades.map(function(trade) {
+    const key = p.id + '_' + trade;
+    const threadMsgs = msgs[key] || [];
+    const lastMsg = threadMsgs[threadMsgs.length-1];
+    const initials = trade.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+    return '<div class="thread-item" onclick="openThread('' + escHtml(trade).replace(/'/g,"\'") + '')">' +
+      '<div class="thread-avatar">' + initials + '</div>' +
+      '<div style="flex:1;min-width:0">' +
+      '<div style="font-weight:600;font-size:14px">' + escHtml(trade) + '</div>' +
+      (lastMsg ? '<div style="color:#6b8099;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(lastMsg.text) + '</div>' : '<div style="color:#4a6080;font-size:12px">No messages yet</div>') +
+      '</div>' +
+      (threadMsgs.length>0?'<span class="badge badge-blue">' + threadMsgs.length + '</span>':'') +
+      '</div>';
+  }).join('');
+  return '<div style="padding:16px"><div style="color:#6b8099;font-size:13px;margin-bottom:12px">' + t('selectThread') + ' (' + trades.length + ' trades)</div>' + threadList + '</div>';
+}
+
+function openThread(trade) {
+  state.messageThread = trade;
+  render();
+}
+window.openThread = openThread;
+
+function renderThreadView(p, db) {
+  const key = p.id + '_' + state.messageThread;
+  const msgs = JSON.parse(localStorage.getItem('api_messages') || '{}');
+  const threadMsgs = msgs[key] || [];
+  
+  const msgHtml = threadMsgs.map(function(m) {
+    const cls = m.sender === 'admin' ? 'admin' : m.sender === 'sub' ? 'sub' : 'client';
+    return '<div style="display:flex;flex-direction:column;' + (cls==='admin'?'align-items:flex-end':'align-items:flex-start') + '">' +
+      '<div class="msg-sender">' + escHtml(m.senderName||m.sender) + '</div>' +
+      '<div class="msg-bubble ' + cls + '">' + escHtml(m.text) + '</div>' +
+      '<div class="msg-time">' + new Date(m.ts).toLocaleString() + '</div>' +
+      '</div>';
+  }).join('');
+
+  const userType = state.currentUser ? state.currentUser.type : 'admin';
+
+  return '<div style="display:flex;flex-direction:column;height:calc(100vh - 200px)">' +
+    '<div style="padding:12px 16px;border-bottom:1px solid #1e3a5f;display:flex;align-items:center;gap:12px">' +
+    '<button class="btn-ghost" onclick="state.messageThread=null;render()" style="padding:6px 12px;font-size:13px">&larr;</button>' +
+    '<div>' +
+    '<div style="font-weight:700">' + escHtml(state.messageThread) + '</div>' +
+    '<div style="color:#6b8099;font-size:12px">' + escHtml(p.clientName) + '</div>' +
+    '</div></div>' +
+    '<div style="flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch" id="msgScrollArea">' +
+    (msgHtml || '<div style="text-align:center;padding:40px;color:#4a6080">No messages yet. Start the conversation!</div>') +
+    '</div>' +
+    '<div class="msg-input-bar">' +
+    '<input class="input-field" id="msgInput" placeholder="' + t('typeMessage') + '" autocomplete="off">' +
+    '<button class="send-btn" onclick="sendMessage('' + p.id + '','' + escHtml(state.messageThread).replace(/'/g,"\'") + '')">&rarr;</button>' +
+    '</div></div>';
+}
+
+window.sendMessage = function(projectId, trade) {
+  const input = document.getElementById('msgInput');
+  const text = input ? input.value.trim() : '';
+  if (!text) return;
+  const key = projectId + '_' + trade;
+  const msgs = JSON.parse(localStorage.getItem('api_messages') || '{}');
+  if (!msgs[key]) msgs[key] = [];
+  const userType = state.currentUser ? state.currentUser.type : 'admin';
+  let senderName = 'Admin';
+  if (userType === 'sub') {
+    const db = getDB();
+    const sub = db.subs.find(function(s){return s.id===state.currentUser.subId;});
+    senderName = sub ? sub.name : 'Sub';
+  } else if (userType === 'client') {
+    senderName = 'Client';
+  }
+  msgs[key].push({ text: text, sender: userType, senderName: senderName, ts: Date.now() });
+  saveMessages(msgs);
+  if (input) input.value = '';
+  state.messageThread = trade;
+  const db = getDB();
+  const p = db.projects.find(function(x){return x.id===projectId;});
+  if (p) {
+    const msgArea = document.getElementById('msgScrollArea');
+    if (msgArea) {
+      const msgs2 = JSON.parse(localStorage.getItem('api_messages') || '{}');
+      const threadMsgs = msgs2[key] || [];
+      const msgHtml = threadMsgs.map(function(m) {
+        const cls = m.sender === 'admin' ? 'admin' : m.sender === 'sub' ? 'sub' : 'client';
+        return '<div style="display:flex;flex-direction:column;' + (cls==='admin'?'align-items:flex-end':'align-items:flex-start') + '">' +
+          '<div class="msg-sender">' + escHtml(m.senderName||m.sender) + '</div>' +
+          '<div class="msg-bubble ' + cls + '">' + escHtml(m.text) + '</div>' +
+          '<div class="msg-time">' + new Date(m.ts).toLocaleString() + '</div>' +
+          '</div>';
+      }).join('');
+      msgArea.innerHTML = msgHtml;
+      msgArea.scrollTop = msgArea.scrollHeight;
+    }
+  }
+};
+
+// ============================================================
+// ADMIN SUBS
+// ============================================================
+function renderAdminSubs() {
+  const db = getDB();
+  const subs = db.subs;
+  if (subs.length === 0) {
+    return '<div style="padding:16px"><button class="btn-orange" onclick="openModal('addSub')" style="margin-bottom:16px">+ ' + t('addSub') + '</button>' +
+      '<div style="text-align:center;padding:40px;color:#6b8099">' + t('noSubs') + '</div></div>';
+  }
+  const cards = subs.map(function(s) {
+    const projCount = (s.projects||[]).length;
+    return '<div class="card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:start">' +
+      '<div>' +
+      '<div style="font-weight:700;font-size:16px">' + escHtml(s.name) + '</div>' +
+      '<div style="color:#f97316;font-size:13px;margin-top:2px">' + escHtml(s.trade) + '</div>' +
+      '<div style="color:#6b8099;font-size:12px;margin-top:4px">@' + escHtml(s.username) + ' &bull; ' + escHtml(s.phone||'') + '</div>' +
+      '</div>' +
+      '<span class="badge badge-blue">' + projCount + ' proj</span>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:10px">' +
+      '<button class="btn-sm btn-blue" onclick="openModal('editSub','' + s.id + '')" style="flex:1">' + t('edit') + '</button>' +
+      '<button class="btn-sm btn-danger" onclick="openModal('deleteSub','' + s.id + '')" style="flex:1">' + t('delete') + '</button>' +
+      '</div></div>';
+  }).join('');
+  return '<div style="padding:16px"><button class="btn-orange" onclick="openModal('addSub')" style="margin-bottom:16px">+ ' + t('addSub') + '</button>' + cards + '</div>';
+}
+
+// ============================================================
+// ADMIN CREDENTIALS
+// ============================================================
+function renderAdminCreds() {
+  const db = getDB();
+  const projPins = db.projects.map(function(p) {
+    return '<div style="display:flex;justify-content:space-between;padding:10px;background:#0d1f36;border-radius:6px;margin-bottom:6px">' +
+      '<span>' + escHtml(p.clientName) + '</span>' +
+      '<span style="color:#f97316;font-weight:700">PIN: ' + p.pin + '</span>' +
+      '</div>';
+  }).join('');
+
+  const subCreds = db.subs.map(function(s) {
+    return '<div style="padding:10px;background:#0d1f36;border-radius:6px;margin-bottom:6px">' +
+      '<div style="font-weight:700">' + escHtml(s.name) + '</div>' +
+      '<div style="color:#6b8099;font-size:13px;margin-top:4px">User: <span style="color:#fff">@' + escHtml(s.username) + '</span> &bull; PIN: <span style="color:#f97316">' + s.pin + '</span></div>' +
+      '<div style="color:#6b8099;font-size:12px">' + escHtml(s.trade) + '</div>' +
+      '</div>';
+  }).join('');
+
+  return '<div style="padding:16px">' +
+    '<div class="card">' +
+    '<div style="font-weight:700;font-size:16px;margin-bottom:12px">' + t('credentials') + '</div>' +
+    '<div style="padding:10px;background:#0d1f36;border-radius:6px;margin-bottom:16px">' +
+    '<div style="color:#6b8099;font-size:12px">ADMIN ACCESS</div>' +
+    '<div style="font-weight:700;color:#f97316">' + t('adminPin') + '</div>' +
+    '</div>' +
+    '<div style="font-weight:600;margin-bottom:8px;color:#6b8099;font-size:13px;text-transform:uppercase">' + t('projectPins') + '</div>' +
+    (projPins || '<div style="color:#4a6080;font-size:13px">No projects yet.</div>') +
+    '</div>' +
+    '<div class="card">' +
+    '<div style="font-weight:600;margin-bottom:8px;color:#6b8099;font-size:13px;text-transform:uppercase">' + t('subAccounts') + '</div>' +
+    (subCreds || '<div style="color:#4a6080;font-size:13px">No sub accounts yet.</div>') +
+    '</div></div>';
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function openModal(type, id) {
+  state.modal = { type: type, id: id || null };
+  renderModal();
+}
+window.openModal = openModal;
+
+function closeModal() {
+  state.modal = null;
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) overlay.remove();
+}
+window.closeModal = closeModal;
+
+function renderModal() {
+  const existing = document.getElementById('modalOverlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modalOverlay';
+  overlay.onclick = function(e) { if (e.target === overlay) closeModal(); };
+
+  let html = '';
+  const m = state.modal;
+  if (!m) return;
+
+  if (m.type === 'newProject' || m.type === 'editProject') {
+    html = buildProjectForm(m);
+  } else if (m.type === 'deleteProject') {
+    html = buildDeleteConfirm('project', m.id);
+  } else if (m.type === 'addSub' || m.type === 'editSub') {
+    html = buildSubForm(m);
+  } else if (m.type === 'deleteSub') {
+    html = buildDeleteConfirm('sub', m.id);
+  } else if (m.type === 'assignSub') {
+    html = buildAssignSubForm(m.id);
+  }
+
+  overlay.innerHTML = '<div class="modal">' + html + '</div>';
+  document.body.appendChild(overlay);
+  attachModalEvents();
+}
+
+function buildProjectForm(m) {
+  const isEdit = m.type === 'editProject';
+  const db = getDB();
+  const p = isEdit ? db.projects.find(function(x){return x.id===m.id;}) : null;
+  const v = p || {};
+  return '<div style="font-size:18px;font-weight:800;margin-bottom:20px">' + (isEdit?t('edit'):t('newProject')) + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:12px">' +
+    '<input class="input-field" id="mClientName" placeholder="' + t('clientName') + '" value="' + escHtml(v.clientName||'') + '">' +
+    '<input class="input-field" id="mAddress" placeholder="' + t('address') + '" value="' + escHtml(v.address||'') + '">' +
+    '<textarea class="input-field" id="mDescription" placeholder="' + t('description') + '" rows="2">' + escHtml(v.description||'') + '</textarea>' +
+    '<input type="date" class="input-field" id="mStartDate" placeholder="' + t('startDate') + '" value="' + (v.startDate||'') + '">' +
+    '<input type="number" class="input-field" id="mBudget" placeholder="' + t('budget') + '" value="' + (v.budget||'') + '">' +
+    '<input class="input-field" id="mPin" placeholder="' + t('projectPin') + '" value="' + (v.pin||'') + '" maxlength="8">' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:20px">' +
+    '<button class="btn-orange" onclick="saveProject('' + (isEdit?m.id:'') + '')" style="flex:1">' + t('save') + '</button>' +
+    '<button class="btn-ghost" onclick="closeModal()" style="flex:1">' + t('cancel') + '</button>' +
+    '</div>';
+}
+
+window.saveProject = function(editId) {
+  const clientName = document.getElementById('mClientName').value.trim();
+  const address = document.getElementById('mAddress').value.trim();
+  const description = document.getElementById('mDescription').value.trim();
+  const startDate = document.getElementById('mStartDate').value;
+  const budget = document.getElementById('mBudget').value;
+  const pin = document.getElementById('mPin').value.trim();
+  if (!clientName || !pin) { showNotif('Client name and PIN required'); return; }
+  const db = getDB();
+  if (editId) {
+    const p = db.projects.find(function(x){return x.id===editId;});
+    if (p) {
+      p.clientName = clientName; p.address = address; p.description = description;
+      p.startDate = startDate; p.budget = budget; p.pin = pin;
+      saveProjects(db.projects);
+      showNotif(t('projectUpdated'));
+    }
+  } else {
+    const newProj = {
+      id: genId(), clientName: clientName, address: address, description: description,
+      startDate: startDate, budget: budget, pin: pin,
+      stages: createDefaultStages(), createdAt: Date.now()
+    };
+    db.projects.push(newProj);
+    saveProjects(db.projects);
+    showNotif(t('projectCreated'));
+  }
+  closeModal();
+  render();
+};
+
+function buildSubForm(m) {
+  const isEdit = m.type === 'editSub';
+  const db = getDB();
+  const s = isEdit ? db.subs.find(function(x){return x.id===m.id;}) : null;
+  const v = s || {};
+  const tradeOptions = TRADES.map(function(trade) {
+    return '<option value="' + escHtml(trade) + '"' + (v.trade===trade?' selected':'') + '>' + escHtml(trade) + '</option>';
+  }).join('');
+  return '<div style="font-size:18px;font-weight:800;margin-bottom:20px">' + (isEdit?t('edit'):t('addSub')) + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:12px">' +
+    '<input class="input-field" id="sName" placeholder="' + t('name') + '" value="' + escHtml(v.name||'') + '">' +
+    '<div class="select-wrapper"><select class="input-field" id="sTrade"><option value="">' + t('trade') + '</option>' + tradeOptions + '</select></div>' +
+    '<input class="input-field" id="sUsername" placeholder="' + t('username') + '" value="' + escHtml(v.username||'') + '" autocapitalize="none">' +
+    '<input class="input-field" id="sPin" placeholder="' + t('pin') + ' (4-8 digits)" value="' + (v.pin||'') + '" maxlength="8">' +
+    '<input class="input-field" id="sPhone" placeholder="' + t('phone') + '" value="' + escHtml(v.phone||'') + '">' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:20px">' +
+    '<button class="btn-orange" onclick="saveSub('' + (isEdit?m.id:'') + '')" style="flex:1">' + t('save') + '</button>' +
+    '<button class="btn-ghost" onclick="closeModal()" style="flex:1">' + t('cancel') + '</button>' +
+    '</div>';
+}
+
+window.saveSub = function(editId) {
+  const name = document.getElementById('sName').value.trim();
+  const trade = document.getElementById('sTrade').value;
+  const username = document.getElementById('sUsername').value.trim();
+  const pin = document.getElementById('sPin').value.trim();
+  const phone = document.getElementById('sPhone').value.trim();
+  if (!name || !trade || !username || !pin) { showNotif('All fields required'); return; }
+  const db = getDB();
+  if (editId) {
+    const s = db.subs.find(function(x){return x.id===editId;});
+    if (s) {
+      s.name=name; s.trade=trade; s.username=username; s.pin=pin; s.phone=phone;
+      saveSubs(db.subs);
+      showNotif(t('subUpdated'));
+    }
+  } else {
+    db.subs.push({ id: genId(), name:name, trade:trade, username:username, pin:pin, phone:phone, projects:[] });
+    saveSubs(db.subs);
+    showNotif(t('subCreated'));
+  }
+  closeModal();
+  render();
+};
+
+function buildDeleteConfirm(type, id) {
+  const db = getDB();
+  let label = '';
+  if (type==='project') {
+    const p = db.projects.find(function(x){return x.id===id;});
+    label = p ? escHtml(p.clientName) : 'this project';
+  } else {
+    const s = db.subs.find(function(x){return x.id===id;});
+    label = s ? escHtml(s.name) : 'this sub';
+  }
+  return '<div style="text-align:center">' +
+    '<div style="font-size:40px;margin-bottom:12px">&#9888;&#65039;</div>' +
+    '<div style="font-size:18px;font-weight:800;margin-bottom:8px">' + t('confirmDelete') + '</div>' +
+    '<div style="color:#6b8099;margin-bottom:20px">' + label + '<br><small>' + t('confirmDeleteMsg') + '</small></div>' +
+    '<div style="display:flex;gap:8px">' +
+    '<button class="btn-sm btn-danger" onclick="confirmDelete('' + type + '','' + id + '')" style="flex:1;padding:12px">' + t('delete') + '</button>' +
+    '<button class="btn-ghost" onclick="closeModal()" style="flex:1">' + t('cancel') + '</button>' +
+    '</div></div>';
+}
+
+window.confirmDelete = function(type, id) {
+  const db = getDB();
+  if (type==='project') {
+    db.projects = db.projects.filter(function(p){return p.id!==id;});
+    saveProjects(db.projects);
+    state.projectView = null;
+  } else {
+    db.subs = db.subs.filter(function(s){return s.id!==id;});
+    saveSubs(db.subs);
+  }
+  showNotif(t('deleted'));
+  closeModal();
+  render();
+};
+
+function buildAssignSubForm(projectId) {
+  const db = getDB();
+  const p = db.projects.find(function(x){return x.id===projectId;});
+  const unassigned = db.subs.filter(function(s){return !(s.projects||[]).includes(projectId);});
+  const assigned = db.subs.filter(function(s){return (s.projects||[]).includes(projectId);});
+  
+  const uList = unassigned.length > 0
+    ? unassigned.map(function(s) {
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#0d1f36;border-radius:6px;margin-bottom:6px">' +
+          '<div><div style="font-weight:600">' + escHtml(s.name) + '</div><div style="color:#6b8099;font-size:12px">' + escHtml(s.trade) + '</div></div>' +
+          '<button class="btn-sm btn-success" onclick="assignSub('' + projectId + '','' + s.id + '')">Assign</button>' +
+          '</div>';
+      }).join('')
+    : '<div style="color:#4a6080;font-size:13px">All subs assigned or no subs exist.</div>';
+  
+  const aList = assigned.length > 0
+    ? assigned.map(function(s) {
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#0d1f36;border-radius:6px;margin-bottom:6px">' +
+          '<div><div style="font-weight:600">' + escHtml(s.name) + '</div><div style="color:#f97316;font-size:12px">' + escHtml(s.trade) + '</div></div>' +
+          '<button class="btn-sm btn-danger" onclick="unassignSub('' + projectId + '','' + s.id + '')">Remove</button>' +
+          '</div>';
+      }).join('')
+    : '';
+
+  return '<div style="font-size:18px;font-weight:800;margin-bottom:16px">Assign Subcontractors</div>' +
+    '<div style="font-weight:600;font-size:13px;color:#6b8099;text-transform:uppercase;margin-bottom:8px">Currently Assigned</div>' +
+    (aList || '<div style="color:#4a6080;font-size:13px;margin-bottom:12px">None</div>') +
+    '<div style="font-weight:600;font-size:13px;color:#6b8099;text-transform:uppercase;margin:12px 0 8px">Available Subs</div>' +
+    uList +
+    '<button class="btn-ghost" onclick="closeModal()" style="width:100%;margin-top:16px">' + t('cancel') + '</button>';
+}
+
+window.assignSub = function(projectId, subId) {
+  const db = getDB();
+  const s = db.subs.find(function(x){return x.id===subId;});
+  if (s) {
+    if (!s.projects) s.projects = [];
+    if (!s.projects.includes(projectId)) s.projects.push(projectId);
+    saveSubs(db.subs);
+    state.modal = { type: 'assignSub', id: projectId };
+    renderModal();
+  }
+};
+
+window.unassignSub = function(projectId, subId) {
+  const db = getDB();
+  const s = db.subs.find(function(x){return x.id===subId;});
+  if (s) {
+    s.projects = (s.projects||[]).filter(function(pid){return pid!==projectId;});
+    saveSubs(db.subs);
+    state.modal = { type: 'assignSub', id: projectId };
+    renderModal();
+  }
+};
+
+// ============================================================
+// CLIENT VIEW
+// ============================================================
+function renderClient() {
+  const db = getDB();
+  const p = db.projects.find(function(x){return x.id===state.currentUser.projectId;});
+  if (!p) { return '<div style="padding:24px;text-align:center;color:#6b8099">Project not found.</div>'; }
+
+  const completed = (p.stages||[]).filter(function(s){return s.status==='complete';}).length;
+  const total = (p.stages||[]).length;
+  const pct = total>0?Math.round(completed/total*100):0;
+
+  const header = '<div class="header">' +
+    '<div style="display:flex;align-items:center;gap:10px">' +
+    '<span style="font-size:22px">&#127968;</span>' +
+    '<div><div style="font-weight:800;font-size:15px">' + escHtml(p.clientName) + '</div>' +
+    '<div style="font-size:11px;color:#6b8099">' + t('clientView') + '</div></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;align-items:center">' +
+    '<button class="lang-toggle" onclick="toggleLang()">' + (state.lang==='en'?'ES':'EN') + '</button>' +
+    '<button class="btn-ghost" onclick="logout()" style="padding:6px 12px;font-size:13px">' + t('logout') + '</button>' +
+    '</div></div>';
+
+  const ptabs = '<div class="tab-bar">' +
+    '<div class="tab ' + (state.projectTab==='overview'?'active':'') + '" onclick="state.projectTab='overview';render()">' + t('overview') + '</div>' +
+    '<div class="tab ' + (state.projectTab==='stages'?'active':'') + '" onclick="state.projectTab='stages';render()">' + t('stages') + '</div>' +
+    '</div>';
+
+  let body = '';
+  if (state.projectTab==='stages') body = renderProjectStages(p, false);
+  else body = renderProjectOverview(p, db, false);
+
+  return header + ptabs + body;
+}
+
+// ============================================================
+// SUB VIEW
+// ============================================================
+function renderSub() {
+  const db = getDB();
+  const sub = db.subs.find(function(s){return s.id===state.currentUser.subId;});
+  if (!sub) { return '<div style="padding:24px;text-align:center;color:#6b8099">Sub account not found.</div>'; }
+
+  const header = '<div class="header">' +
+    '<div style="display:flex;align-items:center;gap:10px">' +
+    '<span style="font-size:22px">&#128296;</span>' +
+    '<div><div style="font-weight:800;font-size:15px">' + escHtml(sub.name) + '</div>' +
+    '<div style="font-size:11px;color:#f97316">' + escHtml(sub.trade) + '</div></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;align-items:center">' +
+    '<button class="lang-toggle" onclick="toggleLang()">' + (state.lang==='en'?'ES':'EN') + '</button>' +
+    '<button class="btn-ghost" onclick="logout()" style="padding:6px 12px;font-size:13px">' + t('logout') + '</button>' +
+    '</div></div>';
+
+  // If viewing a specific project's thread
+  if (state.subView) {
+    const p = db.projects.find(function(x){return x.id===state.subView;});
+    if (p) {
+      if (state.messageThread) {
+        const threadHTML = renderThreadView(p, db);
+        const backBtn = '<div style="padding:12px 16px;border-bottom:1px solid #1e3a5f">' +
+          '<button class="btn-ghost" onclick="state.messageThread=null;render()" style="padding:6px 14px;font-size:13px">&larr; ' + t('back') + '</button></div>';
+        return header + backBtn + threadHTML;
+      }
+      // Show sub's trade thread for this project
+      const key = p.id + '_' + sub.trade;
+      const msgs = JSON.parse(localStorage.getItem('api_messages') || '{}');
+      const threadMsgs = msgs[key] || [];
+      state.messageThread = sub.trade;
+      const threadHTML = renderThreadView(p, db);
+      const backBtn = '<div style="padding:12px 16px;border-bottom:1px solid #1e3a5f">' +
+        '<button class="btn-ghost" onclick="state.subView=null;state.messageThread=null;render()" style="padding:6px 14px;font-size:13px">&larr; ' + t('back') + '</button></div>';
+      return header + backBtn + threadHTML;
+    }
+  }
+
+  // Project list for sub
+  const assignedProjects = db.projects.filter(function(p){return (sub.projects||[]).includes(p.id);});
+  const projCards = assignedProjects.length === 0
+    ? '<div style="text-align:center;padding:40px;color:#6b8099">' + t('noAssigned') + '</div>'
+    : assignedProjects.map(function(p) {
+        const completed = (p.stages||[]).filter(function(s){return s.status==='complete';}).length;
+        const total = (p.stages||[]).length;
+        const pct = total>0?Math.round(completed/total*100):0;
+        return '<div class="card" style="cursor:pointer" onclick="state.subView='' + p.id + '';state.messageThread=null;render()">' +
+          '<div style="font-weight:700;font-size:16px">' + escHtml(p.clientName) + '</div>' +
+          '<div style="color:#6b8099;font-size:13px;margin-top:2px">' + escHtml(p.address||'') + '</div>' +
+          '<div style="display:flex;align-items:center;gap:10px;margin-top:10px">' +
+          '<div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+          '<span style="color:#f97316;font-weight:700;font-size:13px">' + pct + '%</span>' +
+          '</div>' +
+          '<div style="margin-top:8px;display:flex;align-items:center;gap:8px">' +
+          '<span style="font-size:12px;color:#6b8099">Tap to open ' + escHtml(sub.trade) + ' thread</span>' +
+          '<span style="font-size:16px">&#128172;</span>' +
+          '</div></div>';
+      }).join('');
+
+  return header + '<div style="padding:16px">' +
+    '<div class="card" style="margin-bottom:16px">' +
+    '<div style="font-size:13px;color:#6b8099">Your Trade</div>' +
+    '<div style="font-weight:700;font-size:18px;color:#f97316">' + escHtml(sub.trade) + '</div>' +
+    '<div style="font-size:13px;color:#6b8099;margin-top:4px">@' + escHtml(sub.username) + '</div>' +
+    '</div>' +
+    '<div style="font-weight:700;margin-bottom:12px">' + t('yourProjects') + ' (' + assignedProjects.length + ')</div>' +
+    projCards + '</div>';
+}
+
+// ============================================================
+// EVENT ATTACHMENT
+// ============================================================
+function attachEvents() {
+  // Enter key on PIN entry
+  document.addEventListener('keydown', function handler(e) {
+    if (e.key === 'Enter') {
+      if (state.screen === 'pinEntry') submitPin();
+    }
+  }, { once: true });
+  
+  // Auto-scroll messages
+  const msgArea = document.getElementById('msgScrollArea');
+  if (msgArea) msgArea.scrollTop = msgArea.scrollHeight;
+  
+  // Focus message input
+  const msgInput = document.getElementById('msgInput');
+  if (msgInput) {
+    msgInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const projectId = state.projectView || state.subView;
+        if (projectId && state.messageThread) {
+          window.sendMessage(projectId, state.messageThread);
+        }
+      }
+    });
+  }
+}
+
+function attachModalEvents() {
+  // Enter to save in modal inputs
+  const modal = document.getElementById('modalOverlay');
+  if (modal) {
+    modal.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+        const saveBtn = modal.querySelector('.btn-orange');
+        if (saveBtn) saveBtn.click();
+      }
+    });
+  }
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+  render();
+});
+
+</script>
+</body>
+</html>

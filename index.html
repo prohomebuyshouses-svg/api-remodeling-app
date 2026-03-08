@@ -224,6 +224,20 @@ input:checked+.slider:before{transform:translateX(20px)}
 .photo-spinner{width:24px;height:24px;border:3px solid #334155;border-top:3px solid #e8720c;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #chatPhotoInput{display:none}
+
+/* TRADE SELECTOR */
+.trade-selector{margin-top:4px}
+.trade-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.preset-btn{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;background:#1e293b;color:#94a3b8;border:1px solid #334155;transition:all .15s}
+.preset-btn:active,.preset-btn.active{background:#e8720c;color:#fff;border-color:#e8720c}
+.trade-chips{display:flex;flex-wrap:wrap;gap:6px;max-height:200px;overflow-y:auto;padding:4px 0}
+.trade-chip{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:16px;font-size:12px;font-weight:500;background:#1e293b;color:#94a3b8;border:1.5px solid #334155;cursor:pointer;transition:all .15s;user-select:none;-webkit-user-select:none}
+.trade-chip.selected{background:rgba(232,114,12,0.15);color:#e8720c;border-color:#e8720c}
+.trade-chip .chip-icon{font-size:13px}
+.custom-trade-row{display:flex;gap:6px;margin-top:8px}
+.custom-trade-row input{flex:1}
+.custom-trade-row button{white-space:nowrap;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;background:#e8720c;color:#fff}
+.trade-count{font-size:11px;color:#64748b;margin-top:4px}
 </style>
 </head>
 <body>
@@ -514,6 +528,22 @@ input:checked+.slider:before{transform:translateX(20px)}
       <label class="form-label" id="npLabelPin">Project PIN</label>
       <input type="tel" inputmode="numeric" maxlength="6" class="form-input" id="npPin" placeholder="4-6 digits">
     </div>
+    <div class="form-group">
+      <label class="form-label" id="npLabelTrades">Trades / Message Threads</label>
+      <div class="trade-presets" id="npPresets">
+        <button class="preset-btn active" onclick="applyTradePreset('all','np')" id="npPresetAll">All Trades</button>
+        <button class="preset-btn" onclick="applyTradePreset('kitchen','np')" id="npPresetKitchen">Kitchen</button>
+        <button class="preset-btn" onclick="applyTradePreset('bathroom','np')" id="npPresetBath">Bathroom</button>
+        <button class="preset-btn" onclick="applyTradePreset('handyman','np')" id="npPresetHandy">Handyman</button>
+        <button class="preset-btn" onclick="applyTradePreset('none','np')" id="npPresetNone">None</button>
+      </div>
+      <div class="trade-chips" id="npTradeChips"></div>
+      <div class="custom-trade-row">
+        <input type="text" class="form-input" id="npCustomTrade" placeholder="Custom trade name...">
+        <button onclick="addCustomTrade('np')">+ Add</button>
+      </div>
+      <div class="trade-count" id="npTradeCount">23 trades selected</div>
+    </div>
     <button class="btn-primary" onclick="saveNewProject()" id="npSaveBtn">Create Project</button>
     <button class="btn-secondary" onclick="closeModal('newProjectModal')" style="width:100%;margin-top:8px" id="npCancelBtn">Cancel</button>
   </div>
@@ -550,6 +580,22 @@ input:checked+.slider:before{transform:translateX(20px)}
     <div class="form-group">
       <label class="form-label" id="epLabelPin">Project PIN</label>
       <input type="tel" inputmode="numeric" maxlength="6" class="form-input" id="epPin">
+    </div>
+    <div class="form-group">
+      <label class="form-label" id="epLabelTrades">Trades / Message Threads</label>
+      <div class="trade-presets" id="epPresets">
+        <button class="preset-btn" onclick="applyTradePreset('all','ep')" id="epPresetAll">All Trades</button>
+        <button class="preset-btn" onclick="applyTradePreset('kitchen','ep')" id="epPresetKitchen">Kitchen</button>
+        <button class="preset-btn" onclick="applyTradePreset('bathroom','ep')" id="epPresetBath">Bathroom</button>
+        <button class="preset-btn" onclick="applyTradePreset('handyman','ep')" id="epPresetHandy">Handyman</button>
+        <button class="preset-btn" onclick="applyTradePreset('none','ep')" id="epPresetNone">None</button>
+      </div>
+      <div class="trade-chips" id="epTradeChips"></div>
+      <div class="custom-trade-row">
+        <input type="text" class="form-input" id="epCustomTrade" placeholder="Custom trade name...">
+        <button onclick="addCustomTrade('ep')">+ Add</button>
+      </div>
+      <div class="trade-count" id="epTradeCount">0 trades selected</div>
     </div>
     <button class="btn-primary" onclick="saveEditProject()" id="epSaveBtn">Save Changes</button>
     <button class="btn-danger" onclick="deleteProject()" style="width:100%;margin-top:8px" id="epDeleteBtn">Delete Project</button>
@@ -713,6 +759,18 @@ const TRADE_ICONS = {
   'Drywall':'🔲','Landscaping':'🌿','Designing':'✏️','Tape/Bed/Texture':'🖌️','Painting':'🎨',
   'Floors':'📐','Interior Doors & Trim':'🚪','Cabinets':'🗄️','Countertops':'⬜','Tile':'🔷',
   'Make Ready':'✅','Cleaning':'🧹'
+};
+
+const TRADE_PRESETS = {
+  all: TRADES.slice(),
+  kitchen: ['Plumbing','Electrical','Framing','Drywall','Tape/Bed/Texture','Painting','Floors','Interior Doors & Trim','Cabinets','Countertops','Tile','Cleaning'],
+  bathroom: ['Plumbing','Electrical','Framing','Drywall','Tape/Bed/Texture','Painting','Floors','Tile','Cleaning'],
+  handyman: ['Painting','Floors','Drywall','Tape/Bed/Texture','Cleaning']
+};
+
+const PRESET_LABELS = {
+  en: {all:'All Trades',kitchen:'Kitchen',bathroom:'Bathroom',handyman:'Handyman',none:'None'},
+  es: {all:'Todos',kitchen:'Cocina',bathroom:'Baño',handyman:'Mantenimiento',none:'Ninguno'}
 };
 
 const STATUS_LABELS = {
@@ -986,6 +1044,117 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 }
 
+
+// ========== TRADE SELECTOR FUNCTIONS ==========
+var npSelectedTrades = [];
+var epSelectedTrades = [];
+var npCustomTrades = [];
+var epCustomTrades = [];
+
+function getProjectTrades(proj) {
+  // Backward compatibility: if project has no trades array, return all trades
+  if (!proj.trades || proj.trades.length === 0) return TRADES.slice();
+  return proj.trades.slice();
+}
+
+function getTradeDisplayName(tradeKey) {
+  var idx = TRADES.indexOf(tradeKey);
+  if (idx > -1) return lang === 'es' ? TRADES_ES[idx] : TRADES[idx];
+  return tradeKey; // custom trade
+}
+
+function renderTradeChips(prefix) {
+  var container = document.getElementById(prefix + 'TradeChips');
+  var selected = prefix === 'np' ? npSelectedTrades : epSelectedTrades;
+  var customs = prefix === 'np' ? npCustomTrades : epCustomTrades;
+  var allAvailable = TRADES.concat(customs);
+  var allDisplayNames = (lang === 'es' ? TRADES_ES : TRADES).concat(customs);
+  
+  container.innerHTML = allAvailable.map(function(trade, i) {
+    var icon = TRADE_ICONS[trade] || '🔧';
+    var isSelected = selected.indexOf(trade) > -1;
+    var displayName = i < TRADES.length ? allDisplayNames[i] : trade;
+    return '<div class="trade-chip' + (isSelected ? ' selected' : '') + '" onclick="toggleTradeChip(\'' + prefix + '\',\'' + trade.replace(/'/g, "\\'") + '\')" data-trade="' + escHtml(trade) + '">' +
+      '<span class="chip-icon">' + icon + '</span>' + escHtml(displayName) +
+      '</div>';
+  }).join('');
+  
+  var countEl = document.getElementById(prefix + 'TradeCount');
+  countEl.textContent = selected.length + ' ' + t('tradesSelected');
+  
+  updatePresetHighlight(prefix);
+}
+
+function toggleTradeChip(prefix, trade) {
+  var selected = prefix === 'np' ? npSelectedTrades : epSelectedTrades;
+  var idx = selected.indexOf(trade);
+  if (idx > -1) {
+    selected.splice(idx, 1);
+  } else {
+    selected.push(trade);
+  }
+  renderTradeChips(prefix);
+}
+
+function applyTradePreset(preset, prefix) {
+  var selected;
+  if (preset === 'none') {
+    selected = [];
+  } else if (preset === 'all') {
+    var customs = prefix === 'np' ? npCustomTrades : epCustomTrades;
+    selected = TRADES.concat(customs);
+  } else {
+    selected = (TRADE_PRESETS[preset] || []).slice();
+  }
+  if (prefix === 'np') { npSelectedTrades = selected; }
+  else { epSelectedTrades = selected; }
+  renderTradeChips(prefix);
+}
+
+function updatePresetHighlight(prefix) {
+  var selected = prefix === 'np' ? npSelectedTrades : epSelectedTrades;
+  var customs = prefix === 'np' ? npCustomTrades : epCustomTrades;
+  var allTrades = TRADES.concat(customs);
+  var btns = document.querySelectorAll('#' + prefix + 'Presets .preset-btn');
+  btns.forEach(function(btn) { btn.classList.remove('active'); });
+  
+  if (selected.length === 0) {
+    var noneBtn = document.getElementById(prefix + 'PresetNone');
+    if (noneBtn) noneBtn.classList.add('active');
+  } else if (selected.length === allTrades.length) {
+    var allBtn = document.getElementById(prefix + 'PresetAll');
+    if (allBtn) allBtn.classList.add('active');
+  } else {
+    // Check if matches a preset
+    Object.keys(TRADE_PRESETS).forEach(function(key) {
+      if (key === 'all') return;
+      var presetTrades = TRADE_PRESETS[key];
+      if (presetTrades.length === selected.length && presetTrades.every(function(t) { return selected.indexOf(t) > -1; })) {
+        var btn = document.getElementById(prefix + 'Preset' + key.charAt(0).toUpperCase() + key.slice(1));
+        if (btn) btn.classList.add('active');
+      }
+    });
+  }
+}
+
+function addCustomTrade(prefix) {
+  var input = document.getElementById(prefix + 'CustomTrade');
+  var name = input.value.trim();
+  if (!name) { showToast(t('enterTradeName'), 'error'); return; }
+  var customs = prefix === 'np' ? npCustomTrades : epCustomTrades;
+  var selected = prefix === 'np' ? npSelectedTrades : epSelectedTrades;
+  var allExisting = TRADES.concat(customs);
+  if (allExisting.some(function(t) { return t.toLowerCase() === name.toLowerCase(); })) {
+    showToast(t('tradeExists'), 'error'); return;
+  }
+  customs.push(name);
+  selected.push(name);
+  input.value = '';
+  renderTradeChips(prefix);
+  showToast(t('tradeAdded'), 'success');
+}
+
+
 function formatDate(d) {
   if (!d) return '';
   try { return new Date(d + 'T00:00:00').toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}); }
@@ -1058,6 +1227,14 @@ const T = {
     addedOn:'Added', assignedSubs:'Assigned Subs', removeSub:'Remove',
     confirmDelete:'Are you sure? This cannot be undone.',
     español:'Español', english:'English',
+    selectTrades:'Oficios / Hilos de Mensajes', tradesSelected:'oficios seleccionados',
+    customTradePlaceholder:'Nombre de oficio personalizado...', addTrade:'+ Agregar',
+    allTrades:'Todos los Oficios', kitchenPreset:'Cocina', bathroomPreset:'Baño', handymanPreset:'Mantenimiento', nonePreset:'Ninguno',
+    tradeAdded:'Oficio agregado!', tradeExists:'El oficio ya existe', enterTradeName:'Ingrese nombre de oficio',
+    selectTrades:'Trades / Message Threads', tradesSelected:'trades selected',
+    customTradePlaceholder:'Custom trade name...', addTrade:'+ Add',
+    allTrades:'All Trades', kitchenPreset:'Kitchen', bathroomPreset:'Bathroom', handymanPreset:'Handyman', nonePreset:'None',
+    tradeAdded:'Trade added!', tradeExists:'Trade already exists', enterTradeName:'Enter a trade name',
     today:'Today', yesterday:'Yesterday',
     myProject:'My Project', projectDetails:'Project Details',
     assignedTo:'Assigned to this project',
@@ -1198,6 +1375,25 @@ function applyLang() {
   if (pmPinDesc) pmPinDesc.textContent = lang === 'es' ? 'Ingrese PIN de gerente' : 'Enter PM PIN to continue';
   var btnPm = document.getElementById('btnPm');
   if (btnPm) btnPm.textContent = lang === 'es' ? 'Gerente de Proyecto' : 'Project Manager';
+
+  // Trade selector labels
+  var npLabelTrades = document.getElementById('npLabelTrades');
+  if (npLabelTrades) npLabelTrades.textContent = t('selectTrades');
+  var epLabelTrades = document.getElementById('epLabelTrades');
+  if (epLabelTrades) epLabelTrades.textContent = t('selectTrades');
+  var npCustom = document.getElementById('npCustomTrade');
+  if (npCustom) npCustom.placeholder = t('customTradePlaceholder');
+  var epCustom = document.getElementById('epCustomTrade');
+  if (epCustom) epCustom.placeholder = t('customTradePlaceholder');
+  // Preset buttons
+  var pLabels = PRESET_LABELS[lang] || PRESET_LABELS.en;
+  ['np','ep'].forEach(function(pfx) {
+    var a = document.getElementById(pfx + 'PresetAll'); if (a) a.textContent = pLabels.all;
+    var k = document.getElementById(pfx + 'PresetKitchen'); if (k) k.textContent = pLabels.kitchen;
+    var b = document.getElementById(pfx + 'PresetBath'); if (b) b.textContent = pLabels.bathroom;
+    var h = document.getElementById(pfx + 'PresetHandy'); if (h) h.textContent = pLabels.handyman;
+    var n = document.getElementById(pfx + 'PresetNone'); if (n) n.textContent = pLabels.none;
+  });
 }
 
 // ============================================================
@@ -1613,6 +1809,10 @@ function openNewProject() {
   document.getElementById('npStartDate').value = '';
   document.getElementById('npBudget').value = '';
   document.getElementById('npPin').value = '';
+  document.getElementById('npCustomTrade').value = '';
+  npCustomTrades = [];
+  npSelectedTrades = TRADES.slice();
+  renderTradeChips('np');
   openModal('newProjectModal');
 }
 
@@ -1623,6 +1823,8 @@ function saveNewProject() {
   var pin = document.getElementById('npPin').value.trim();
   if (!clientName || !address || !pin) { showToast('Please fill required fields','error'); return; }
   if (pin.length < 4) { showToast('PIN must be at least 4 digits','error'); return; }
+  var selectedTrades = npSelectedTrades.slice();
+  var customTrades = npCustomTrades.slice();
   var proj = {
     id: generateId(),
     clientName: clientName,
@@ -1632,6 +1834,8 @@ function saveNewProject() {
     budget: document.getElementById('npBudget').value,
     pin: pin,
     createdAt: new Date().toISOString(),
+    trades: selectedTrades,
+    customTrades: customTrades,
     stages: STAGES.map(function(name,i) { return {name:name, nameEs:STAGES_ES[i], status:'not_started', price:'', startDate:'', endDate:'', notes:''}; })
   };
   state.projects.push(proj);
@@ -1725,6 +1929,12 @@ function openEditProject(id) {
   var pinLabel = pinField ? pinField.closest('.form-group') : null;
   if (pinField && currentUser === 'pm') { pinField.parentElement.style.display = 'none'; }
   else if (pinField) { pinField.parentElement.style.display = ''; }
+  // Hide trade selector for PM
+  var tradeSection = document.getElementById('epLabelTrades');
+  if (tradeSection) {
+    var tradeGroup = tradeSection.closest('.form-group');
+    if (tradeGroup) tradeGroup.style.display = (currentUser === 'pm') ? 'none' : '';
+  }
   document.getElementById('epProjectId').value = id;
   document.getElementById('epClientName').value = proj.clientName;
   document.getElementById('epAddress').value = proj.address;
@@ -1732,6 +1942,11 @@ function openEditProject(id) {
   document.getElementById('epStartDate').value = proj.startDate || '';
   document.getElementById('epBudget').value = proj.budget || '';
   document.getElementById('epPin').value = proj.pin;
+  document.getElementById('epCustomTrade').value = '';
+  // Load existing trades
+  epCustomTrades = (proj.customTrades || []).slice();
+  epSelectedTrades = getProjectTrades(proj);
+  renderTradeChips('ep');
   openModal('editProjectModal');
 }
 
@@ -1747,6 +1962,10 @@ function saveEditProject() {
   proj.startDate = document.getElementById('epStartDate').value;
   proj.budget = document.getElementById('epBudget').value;
   proj.pin = pin;
+  if (currentUser !== 'pm') {
+    proj.trades = epSelectedTrades.slice();
+    proj.customTrades = epCustomTrades.slice();
+  }
   saveState();
   closeModal('editProjectModal');
   renderPdInfo();
@@ -2146,35 +2365,49 @@ function renderClientThreads() {
 }
 
 function renderTradeThreadList(el, projectId, role) {
-  const trades = TRADES;
-  const tradeNames = lang === 'es' ? TRADES_ES : TRADES;
+  const proj = state.projects.find(p => p.id === projectId);
+  const projectTrades = proj ? getProjectTrades(proj) : TRADES;
+  const allCustoms = proj && proj.customTrades ? proj.customTrades : [];
+  
+  // Build the display list based on project's trades
+  let tradeList = [];
+  projectTrades.forEach(trade => {
+    const stdIdx = TRADES.indexOf(trade);
+    const displayName = stdIdx > -1 ? (lang === 'es' ? TRADES_ES[stdIdx] : TRADES[stdIdx]) : trade;
+    tradeList.push({key: trade, display: displayName});
+  });
 
-  let filteredIndices = trades.map((_, i) => i);
+  // Filter for subs - only show their assigned trade
   if (role === 'sub' && currentSubId) {
     const sub = state.subs.find(s => s.id === currentSubId);
     if (sub) {
-      filteredIndices = trades.map((t, i) => i).filter(i => trades[i] === sub.trade);
+      tradeList = tradeList.filter(t => t.key === sub.trade);
     }
   }
 
-  el.innerHTML = filteredIndices.map(i => {
-    const trade = trades[i];
+  if (tradeList.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#64748b;font-size:14px">' + (lang === 'es' ? 'No hay oficios asignados a este proyecto' : 'No trades assigned to this project') + '</div>';
+    return;
+  }
+
+  el.innerHTML = tradeList.map(t => {
+    const trade = t.key;
+    const displayName = t.display;
     const msgs = getMsgKey(projectId, trade);
     const last = msgs[msgs.length - 1];
     const preview = last ? (last.imageUrl ? '\uD83D\uDCF7 Photo' : last.text.substring(0, 40) + (last.text.length > 40 ? '\u2026' : '')) : (lang === 'es' ? 'Sin mensajes' : 'No messages');
     const time = last ? formatMsgTime(last.ts) : '';
     const icon = TRADE_ICONS[trade] || '\uD83D\uDCAC';
-    return `<div class="thread-list-item" onclick="openChat('${projectId}','${encodeURIComponent(trade)}','${encodeURIComponent(tradeNames[i])}','${role}')">
+    return `<div class="thread-list-item" onclick="openChat('${projectId}','${encodeURIComponent(trade)}','${encodeURIComponent(displayName)}','${role}')">
       <div class="thread-icon">${icon}</div>
       <div class="thread-info">
-        <div class="thread-name">${escHtml(tradeNames[i])}</div>
+        <div class="thread-name">${escHtml(displayName)}</div>
         <div class="thread-preview">${escHtml(preview)}</div>
       </div>
       <div class="thread-time">${time}</div>
     </div>`;
   }).join('');
 }
-
 function formatMsgTime(ts) {
   if (!ts) return '';
   const d = new Date(ts);

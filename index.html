@@ -444,8 +444,8 @@ input:checked+.slider:before{transform:translateX(20px)}
   </div>
   <div class="chat-messages" id="chatMessages"></div>
   <div class="chat-input-bar" style="position:relative">
-    <input type="file" id="chatPhotoInput" accept="image/*" capture="environment" onchange="handlePhotoSelect(event)">
-    <button class="chat-photo-btn" onclick="document.getElementById('chatPhotoInput').click()" type="button" aria-label="Send photo">📷</button>
+    <input type="file" id="chatPhotoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
+    <button class="chat-photo-btn" onclick="triggerPhotoInput(event)" ontouchend="triggerPhotoInput(event)" type="button" aria-label="Send photo">📷</button>
     <textarea class="chat-input" id="chatInput" rows="1" placeholder="Message..." id="chatInputField"></textarea>
     <button class="chat-send" onclick="sendMessage()">➤</button>
   </div>
@@ -2329,11 +2329,15 @@ function sendMessage() {
 var CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/du6jbmuc0/image/upload';
 var CLOUDINARY_PRESET = 'api_remodeling';
 
+function triggerPhotoInput(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  var inp = document.getElementById('chatPhotoInput');
+  if (inp) { inp.value = ''; inp.click(); }
+}
+
 function handlePhotoSelect(event) {
   var file = event.target.files[0];
   if (!file) return;
-  // Reset input so same file can be selected again
-  event.target.value = '';
   
   if (!file.type.startsWith('image/')) {
     showToast('Please select an image file', 'error');
@@ -2345,17 +2349,26 @@ function handlePhotoSelect(event) {
   }
   
   uploadPhotoToCloudinary(file);
+  // Reset input so same file can be selected again
+  event.target.value = '';
 }
 
 function uploadPhotoToCloudinary(file) {
   if (!chatContext) return;
   
-  // Show uploading indicator
-  var inputBar = document.querySelector('.chat-input-bar');
+  // Show uploading indicator with clear message
+  var inputBar = document.querySelector('#chatScreen .chat-input-bar');
+  if (!inputBar) inputBar = document.querySelector('.chat-input-bar');
   var overlay = document.createElement('div');
   overlay.className = 'photo-uploading-overlay';
-  overlay.innerHTML = '<div class="photo-spinner"></div><span style="color:#e2e8f0;margin-left:10px;font-size:13px">Uploading photo...</span>';
+  overlay.id = 'photoUploadOverlay';
+  overlay.innerHTML = '<div class="photo-spinner"></div><span style="color:#e2e8f0;margin-left:10px;font-size:14px;font-weight:600">Uploading... \u23F3</span>';
+  inputBar.style.position = 'relative';
   inputBar.appendChild(overlay);
+  
+  // Disable the photo button during upload
+  var photoBtn = document.querySelector('.chat-photo-btn');
+  if (photoBtn) photoBtn.disabled = true;
   
   var formData = new FormData();
   formData.append('file', file);
@@ -2366,23 +2379,32 @@ function uploadPhotoToCloudinary(file) {
     body: formData
   })
   .then(function(r) {
-    if (!r.ok) throw new Error('Upload failed: ' + r.status);
+    if (!r.ok) {
+      return r.text().then(function(txt) {
+        throw new Error('Upload failed (HTTP ' + r.status + '): ' + txt.substring(0, 200));
+      });
+    }
     return r.json();
   })
   .then(function(data) {
     // Remove overlay
-    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    var ov = document.getElementById('photoUploadOverlay');
+    if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+    if (photoBtn) photoBtn.disabled = false;
     
     if (data.secure_url) {
       sendPhotoMessage(data.secure_url);
     } else {
-      showToast('Upload failed - no URL returned', 'error');
+      showToast('Upload failed - no URL in response', 'error');
+      console.error('Cloudinary response:', JSON.stringify(data));
     }
   })
   .catch(function(err) {
-    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    var ov = document.getElementById('photoUploadOverlay');
+    if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+    if (photoBtn) photoBtn.disabled = false;
     console.error('Photo upload error:', err);
-    showToast('Photo upload failed. Please try again.', 'error');
+    showToast('Photo upload failed: ' + err.message, 'error');
   });
 }
 
